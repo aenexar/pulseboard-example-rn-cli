@@ -1,15 +1,26 @@
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { EnrichedContext, PulseBoard } from '@pulseboard/react-native';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, ScrollView, StyleSheet } from 'react-native';
-import { Actions, ContextCards, Header, LastEventInfo } from '../components';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ContextCards,
+  Header,
+  LastEventInfo,
+  PulseBoardErrorBoundary,
+  ScreenButton,
+} from '../components';
 import { Footer } from '../components/Footer';
 import { Colors } from '../constants';
 import { usePulseBoard } from '../hooks/usePulseBoard';
+import { RootStackParamList } from '../navigation/AppNavigator';
+
+type NavProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
 export const HomeScreen: React.FC = () => {
-  const { track, metric, captureError } = usePulseBoard({
-    screenName: 'HomeScreen',
-  });
+  const navigation = useNavigation<NavProp>();
+  const { metric } = usePulseBoard({ screenName: 'HomeScreen' });
+
   const [context, setContext] = useState<EnrichedContext | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastEvent, setLastEvent] = useState<string | null>(null);
@@ -19,91 +30,89 @@ export const HomeScreen: React.FC = () => {
     PulseBoard.getContext().then(ctx => {
       setContext(ctx);
       setLoading(false);
-
       const loadTime = Date.now() - loadStart.current;
       metric('home_screen_load_time', loadTime, { payload: { unit: 'ms' } });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleTrackEvent = () => {
-    track('button_pressed', { button: 'Track Event', screen: 'HomeScreen' });
-    setLastEvent('event → button_pressed');
-    Alert.alert('✅ Event Tracked', 'Check your PulseBoard dashboard');
-  };
-
-  const handleTrackMetric = () => {
-    const value = Math.floor(Math.random() * 500) + 50;
-    metric('api_response_time', value, { endpoint: '/api/feed' });
-    setLastEvent(`metric → api_response_time: ${value}ms`);
-    Alert.alert('✅ Metric Tracked', `Response time: ${value}ms`);
-  };
-
-  const handleCaptureError = () => {
-    try {
-      throw new Error('Payment gateway timeout');
-    } catch (err) {
-      captureError(err as Error, {
-        screen: 'HomeScreen',
-        action: 'payment_attempt',
-      });
-      setLastEvent('error → Payment gateway timeout');
-      Alert.alert('✅ Error Captured', 'Check your PulseBoard dashboard');
-    }
-  };
-
-  const handleIdentify = () => {
-    PulseBoard.identify({
-      userId: 'u_demo_001',
-      email: 'demo@example.com',
-      username: 'demouser',
-    });
-    setLastEvent('identify → u_demo_001');
-    Alert.alert(
-      '✅ User Identified',
-      'User context attached to all future events',
-    );
-  };
-
-  const handleClearUser = () => {
-    PulseBoard.clearUser();
-    setLastEvent('clearUser');
-    Alert.alert('✅ User Cleared');
-  };
-
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Header */}
-      <Header />
+    <PulseBoardErrorBoundary screenName="HomeScreen">
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+      >
+        <Header />
+        <ContextCards loading={loading} context={context} />
+        <LastEventInfo lastEvent={lastEvent} />
 
-      {/* Context Cards */}
-      <ContextCards loading={loading} context={context} />
+        {/* Navigation to feature screens */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>SDK Features</Text>
 
-      {/* Last Event */}
-      <LastEventInfo lastEvent={lastEvent} />
+          <ScreenButton
+            label="Logs"
+            description="Manual logging, console capture, log levels: debug / info / warn / error"
+            color={Colors.blue}
+            onPress={() => {
+              setLastEvent('navigate → LogsScreen');
+              navigation.navigate('Logs');
+            }}
+          />
+          <ScreenButton
+            label="Feedback"
+            description="Bug reports, feature requests and general feedback with optional screenshot"
+            color={Colors.purple}
+            onPress={() => {
+              setLastEvent('navigate → FeedbackScreen');
+              navigation.navigate('Feedback');
+            }}
+          />
+          <ScreenButton
+            label="Crash Reporting"
+            description="Fatal / non-fatal crashes, error capture and unhandled rejection tracking"
+            color={Colors.red}
+            onPress={() => {
+              setLastEvent('navigate → CrashScreen');
+              navigation.navigate('Crash');
+            }}
+          />
+          <ScreenButton
+            label="API Tracking"
+            description="Track HTTP calls — endpoint, method, status code, duration and payload size"
+            color={Colors.blue}
+            onPress={() => {
+              setLastEvent('navigate → ApiScreen');
+              navigation.navigate('Api');
+            }}
+          />
+          <ScreenButton
+            label="Session Management"
+            description="Start/end sessions, identify users, track screens and flush the event queue"
+            color={Colors.green}
+            onPress={() => {
+              setLastEvent('navigate → SessionScreen');
+              navigation.navigate('Session');
+            }}
+          />
+        </View>
 
-      {/* Actions */}
-      <Actions
-        handleTrackEvent={handleTrackEvent}
-        handleTrackMetric={handleTrackMetric}
-        handleCaptureError={handleCaptureError}
-        handleIdentify={handleIdentify}
-        handleClearUser={handleClearUser}
-      />
-
-      {/* Footer */}
-      <Footer />
-    </ScrollView>
+        <Footer />
+      </ScrollView>
+    </PulseBoardErrorBoundary>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.bg,
-  },
-  content: {
-    padding: 24,
-    paddingBottom: 48,
+  container: { flex: 1, backgroundColor: Colors.bg },
+  content: { padding: 24, paddingBottom: 48 },
+  section: { marginTop: 8, gap: 8 },
+  sectionTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.muted,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    marginBottom: 4,
   },
 });

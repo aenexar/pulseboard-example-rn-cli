@@ -1,8 +1,9 @@
-import { StatusBar, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { PulseBoardErrorBoundary } from './src/components';
+import 'react-native-gesture-handler';
+import { StatusBar } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { initPulseBoard } from './src/config/pulseboard';
-import { HomeScreen } from './src/screens/HomeScreen';
+import { AppNavigator } from './src/navigation/AppNavigator';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 initPulseBoard();
 
@@ -14,20 +15,13 @@ function App() {
         translucent
         backgroundColor={'#0a0a0f'}
       />
-      <SafeAreaView edges={['top', 'bottom']} style={styles.safeAreView}>
-        <PulseBoardErrorBoundary screenName="App">
-          <HomeScreen />
-        </PulseBoardErrorBoundary>
-      </SafeAreaView>
+      <SafeAreaProvider>
+        <GestureHandlerRootView>
+          <AppNavigator />
+        </GestureHandlerRootView>
+      </SafeAreaProvider>
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  safeAreView: {
-    flex: 1,
-    backgroundColor: '#0a0a0f',
-  },
-});
 
 export default App;

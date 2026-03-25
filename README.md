@@ -14,6 +14,11 @@ Built by [Aenexar](https://github.com/aenexar).
 - Android Studio (Android)
 - React Native CLI - [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment)
 
+## Local Setup
+
+1. Copy `src/config/pulseboard.local.example.ts` to `src/config/pulseboard.local.ts`
+2. Fill in your API key and local backend URL
+
 ## Setup
 
 **1 — Install dependencies:**
