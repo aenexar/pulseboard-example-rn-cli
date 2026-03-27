@@ -10,7 +10,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@pulseboard/react-native": "^0.4.9",
+    "@pulseboard/react-native": "^1.0.0",
     "@react-native/new-app-screen": "0.84.1",
     "@react-navigation/native": "^7.1.34",
     "@react-navigation/stack": "^7.8.6",
